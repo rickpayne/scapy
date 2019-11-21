@@ -45,7 +45,7 @@ from scapy.fields import BitEnumField, BitField, ByteEnumField, ByteField, \
     DestIP6Field, FieldLenField, FlagsField, IntField, IP6Field, \
     LongField, MACField, PacketLenField, PacketListField, ShortEnumField, \
     ShortField, SourceIP6Field, StrField, StrFixedLenField, StrLenField, \
-    X3BytesField, XBitField, XIntField, XShortField
+    X3BytesField, XBitField, XIntField, XShortField, YesNoByteField
 from scapy.layers.inet import IP, IPTools, TCP, TCPerror, TracerouteResult, \
     UDP, UDPerror
 from scapy.layers.l2 import CookedLinux, Ether, GRE, Loopback, SNAP
@@ -1246,6 +1246,7 @@ icmp6typescls = {1: "ICMPv6DestUnreach",
                  151: "ICMPv6MRD_Advertisement",
                  152: "ICMPv6MRD_Solicitation",
                  153: "ICMPv6MRD_Termination",
+                 156: "ICMPv6LocatorUpdate",
                  }
 
 icmp6typesminhdrlen = {1: 8,
@@ -1273,7 +1274,8 @@ icmp6typesminhdrlen = {1: 8,
                        147: 8,
                        151: 8,
                        152: 4,
-                       153: 4
+                       153: 4,
+                       156: 24
                        }
 
 icmp6types = {1: "Destination unreachable",
@@ -1610,6 +1612,20 @@ class ICMPv6MRD_Termination(_ICMPv6):
 
     def extract_padding(self, s):
         return s[:4], s[4:]
+
+
+class ICMPv6LocatorUpdate(_ICMPv6):
+    name = "ICMPv6 ILNP Locator Update"
+    fields_desc = [ByteEnumField("type", 156, icmp6types),
+                   ByteField("res", 0),
+                   XShortField("cksum", None),
+                   ByteField("locator count", 0),
+                   YesNoByteField("operation", "Update",
+                                  {'Update': 1, 'Acknowledge': 2, 'invalid': (3.255)}),
+                   BitField("reserved", 0, 16),
+                   StrFixedLenField("locator", "", length=8),
+                   XShortField("preference", 0),
+                   XShortField("lifetime", 0)]
 
 
 #                   ICMPv6 Neighbor Discovery (RFC 2461)                    #
